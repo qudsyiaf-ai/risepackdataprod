@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Daily Production Report – Risepack</title>
+<style>
+:root{
+  --bg:#F2F0EC;--surface:#FFFFFF;--surface2:#F8F6F2;--border:#E5E1D8;--border2:#C8C2B4;
+  --text:#1C1810;--text2:#6B5F4A;--text3:#A89880;
+  --orange:#E8830A;--orange-d:#C4700A;--orange-bg:#FFF4E0;--orange-t:#7A4000;
+  --brown:#2D1F0E;
+  --green:#1A6B45;--green-bg:#E6F4EE;--green-t:#0D4228;
+  --red:#B83220;--red-bg:#FDECEA;--red-t:#7A2015;
+  --amber:#A85208;--amber-bg:#FFF8E6;--amber-t:#6B3405;
+  --r:12px;--rsm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.app{max-width:430px;margin:0 auto;min-height:100vh}
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
+
+/* TOPBAR */
+.topbar{background:var(--brown);padding:11px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.topbar-back{width:32px;height:32px;border:none;background:rgba(255,255,255,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm);color:#fff;font-size:17px;flex-shrink:0}
+.topbar-back:hover{background:rgba(255,255,255,.22)}
+.topbar-info{flex:1;min-width:0}
+.topbar-title{font-size:14px;font-weight:700;color:#fff;line-height:1.2}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px}
+.topbar-logo{height:26px;object-fit:contain}
+
+/* LOGIN */
+.login-wrap{flex:1;display:flex;flex-direction:column;min-height:100vh;background:var(--brown)}
+.login-hero{padding:36px 24px 0;display:flex;flex-direction:column;align-items:center}
+.login-logo-card{background:#fff;border-radius:16px;padding:14px 28px;margin-bottom:22px;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.login-logo{height:36px;object-fit:contain;display:block}
+.login-hero-title{font-size:24px;font-weight:800;color:#fff;text-align:center;line-height:1.15;letter-spacing:-.4px}
+.login-hero-title span{color:var(--orange)}
+.login-hero-sub{font-size:13px;color:rgba(255,255,255,.55);text-align:center;margin-top:8px;line-height:1.5}
+.login-body{background:var(--surface);border-radius:20px 20px 0 0;flex:1;padding:28px 20px 36px;margin-top:28px;box-shadow:0 -6px 28px rgba(0,0,0,.18)}
+
+/* TABS */
+.mode-tabs{display:flex;background:var(--surface2);border-radius:var(--rsm);padding:3px;gap:3px;margin-bottom:20px}
+.mode-tab{flex:1;height:36px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:none;color:var(--text3);transition:all .15s}
+.mode-tab.active{background:var(--surface);color:var(--brown);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+/* FIELDS */
+.field{margin-bottom:13px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select{width:100%;height:44px;border:1.5px solid var(--border2);border-radius:var(--rsm);padding:0 13px;font-size:14px;color:var(--text);background:var(--surface);appearance:none;-webkit-appearance:none;transition:border-color .15s,box-shadow .15s}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B5F4A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:36px}
+.field input:focus,.field select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,131,10,.14)}
+.field input::placeholder{color:var(--text3)}
+.field input[readonly]{background:var(--surface2);color:var(--text2);border-color:var(--border)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* TIME INPUT WITH NOW BUTTON */
+.time-input-wrap{display:block}
+.time-input-wrap input{width:100%}
+.btn-now{margin-top:5px;height:28px;padding:0 10px;background:var(--orange-bg);border:1.5px solid rgba(232,131,10,.4);border-radius:20px;color:var(--orange-t);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn-now:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn-now:active{transform:scale(.95)}
+
+/* MULTI MEMBER */
+.member-row{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);padding:10px 12px;margin-bottom:8px}
+.member-row-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.member-num{width:22px;height:22px;border-radius:50%;background:var(--orange);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.member-row-title{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.member-del{width:26px;height:26px;background:none;border:none;cursor:pointer;border-radius:var(--rsm);color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:15px}
+.member-del:hover{background:var(--red-bg);color:var(--red)}
+
+/* BUTTONS */
+.btn{width:100%;height:46px;border-radius:var(--rsm);font-size:14px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,#E8830A,#C4700A);color:#fff;box-shadow:0 3px 12px rgba(232,131,10,.32)}
+.btn-success{background:linear-gradient(135deg,#1A6B45,#0D4228);color:#fff;box-shadow:0 3px 10px rgba(26,107,69,.28)}
+.btn-danger{background:linear-gradient(135deg,#B83220,#7A2015);color:#fff;box-shadow:0 3px 10px rgba(184,50,32,.28)}
+.btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border2)}
+.btn-outline:hover{border-color:var(--orange);color:var(--orange-d)}
+.btn-ghost{background:none;color:var(--text3);border:none;font-size:12px;font-weight:600;height:36px}
+.btn-add-member{background:none;color:var(--orange-d);border:1.5px dashed rgba(232,131,10,.4);border-radius:var(--rsm);height:40px;width:100%;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px}
+.btn-add-member:hover{background:var(--orange-bg)}
+
+/* BODY */
+.body{flex:1;padding:13px;overflow-y:auto}
+
+/* CARDS */
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:11px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.sc h3{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.ico{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-size:12px}
+.ico-g{background:var(--green-bg)}.ico-o{background:var(--orange-bg)}.ico-b{background:rgba(45,31,14,.08)}
+
+/* TIME */
+.time-row{display:flex;gap:8px;margin-bottom:12px}
+.tb{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:9px 11px}
+.tb .lbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.tb .val{font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.tb .val.live{color:var(--orange)}
+
+/* TEAM */
+.team-bar{display:flex;flex-wrap:wrap;gap:6px}
+.team-pill{display:flex;align-items:center;gap:5px;background:var(--brown);color:#fff;border-radius:20px;padding:4px 10px 4px 6px;font-size:12px;font-weight:600}
+.team-pill-dot{width:18px;height:18px;border-radius:50%;background:var(--orange);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* SESI */
+.sesi-list{display:flex;flex-direction:column;gap:8px}
+.sesi-item{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:var(--rsm);padding:10px 12px}
+.sesi-item-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.sesi-left{flex:1;min-width:0}
+.sesi-order{font-size:13px;font-weight:700;color:var(--text)}
+.sesi-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.sesi-nums{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.pill{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px}
+.po{background:var(--orange-bg);color:var(--orange-t)}.pr{background:var(--red-bg);color:var(--red-t)}.pt{background:var(--surface);border:1px solid var(--border);color:var(--text2)}
+.sesi-del{width:28px;height:28px;background:none;border:none;cursor:pointer;border-radius:var(--rsm);color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sesi-del:hover{background:var(--red-bg);color:var(--red)}
+.sesi-empty{text-align:center;padding:18px;color:var(--text3);font-size:13px}
+
+/* ADD FORM */
+.add-form{border:1.5px dashed var(--border2);border-radius:var(--rsm);padding:13px;margin-top:10px;background:var(--surface2)}
+.add-form h4{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:11px;text-transform:uppercase;letter-spacing:.5px}
+.auto-fill{background:var(--orange-bg);border:1px solid rgba(232,131,10,.25);border-radius:var(--rsm);padding:8px 10px;margin-bottom:10px;font-size:12px;color:var(--orange-t)}
+.auto-fill strong{display:block;margin-bottom:2px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+
+/* INFO ROW */
+.ir{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.ir:last-child{border:none;padding-bottom:0}
+.il{color:var(--text2)}.iv{font-weight:700;color:var(--text);text-align:right}
+
+/* FOOTER */
+.footer{padding:12px 13px;background:var(--surface);border-top:1px solid var(--border)}
+
+/* DONE */
+.done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center;background:var(--bg)}
+.done-icon{width:80px;height:80px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:18px;border:3px solid rgba(26,107,69,.2)}
+.done-icon svg{width:38px;height:38px;stroke:var(--green);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ALERTS */
+.alert{padding:10px 12px;border-radius:var(--rsm);font-size:13px;margin-bottom:11px}
+.ae{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(184,50,32,.2)}
+.aw{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(168,82,8,.2)}
+.aok{background:var(--green-bg);color:var(--green-t);border:1px solid rgba(26,107,69,.2)}
+
+/* SETUP */
+.ss{margin-bottom:20px}
+.ss-title{font-size:12px;font-weight:700;color:var(--brown);margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--orange);display:inline-block}
+.di{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:9px 12px;margin-bottom:6px;gap:9px}
+.di-info{flex:1;min-width:0}
+.di-name{font-size:13px;font-weight:600;color:var(--text)}
+.di-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.sep{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin:14px 0 10px;position:relative}
+.sep::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.sep span{background:var(--bg);padding:0 10px;position:relative}
+
+/* ORDER STATUS TOGGLE */
+.order-status{display:flex;align-items:center;gap:6px}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:20px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(16px)}
+.toggle-lbl{font-size:11px;font-weight:700;color:var(--text3)}
+.toggle-lbl.on{color:var(--green-t)}
+.badge-active{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-bg);color:var(--green-t)}
+.badge-off{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--border);color:var(--text3)}
+
+/* CHECK-IN NOTE */
+.cn{background:var(--green-bg);border:1px solid rgba(26,107,69,.2);border-radius:var(--rsm);padding:9px 12px;font-size:12px;color:var(--green-t);display:flex;align-items:center;gap:7px;font-weight:600}
+.dot-live{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(26,107,69,.2);flex-shrink:0;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(26,107,69,.2)}50%{box-shadow:0 0 0 5px rgba(26,107,69,.07)}}
+svg.ic{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LOGIN -->
+<div id="sc-login" class="screen active">
+<div class="login-wrap">
+  <div class="login-hero">
+    <div class="login-logo-card">
+      <img class="login-logo" src="./logo_rspk.jpeg" alt="Risepack"/>
+    </div>
+    <div class="login-hero-title">Daily <span>Production</span><br>Report</div>
+    <div class="login-hero-sub">Laporan Individu Pekerja Harian</div>
+    <div id="sync-status" style="font-size:11px;color:rgba(255,255,255,.5);margin-top:6px;height:16px;text-align:center"></div>
+  </div>
+  <div class="login-body">
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-single" onclick="setMode('single')">1 Pekerja</button>
+      <button class="mode-tab" id="tab-multi" onclick="setMode('multi')">Tim / Line</button>
+    </div>
+    <!-- SINGLE -->
+    <div id="panel-single">
+      <div class="field"><label>ID Operator</label>
+        <select id="login-id"><option value="">&#8212; Pilih ID Operator &#8212;</option></select>
+      </div>
+      <div id="login-err" class="alert ae" style="display:none"></div>
+      <button class="btn btn-primary" onclick="doLogin()">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Masuk
+      </button>
+    </div>
+    <!-- MULTI -->
+    <div id="panel-multi" style="display:none">
+      <div id="multi-members"></div>
+      <button class="btn-add-member" onclick="addMember()">
+        <svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Tambah Anggota (maks. 10)
+      </button>
+      <div id="multi-err" class="alert ae" style="display:none;margin-top:10px"></div>
+      <button class="btn btn-primary" onclick="doLoginMulti()" style="margin-top:10px">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Masuk sebagai Tim
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn-ghost btn" onclick="showScreen('sc-setup')">&#9881; Setup &amp; Kelola Data</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- HOME -->
+<div id="sc-home" class="screen">
+  <div class="topbar">
+    <img class="topbar-logo" src="./logo_rspk.jpeg" alt="Risepack"/>
+    <div class="topbar-info">
+      <div class="topbar-title" id="home-title">Operator</div>
+      <div class="topbar-sub" id="home-subtitle">Tanggal</div>
+    </div>
+    <button class="topbar-back" onclick="doLogout()" title="Logout">
+      <svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="body">
+    <div id="team-bar-wrap" style="display:none">
+      <div class="sc" style="padding:12px 14px;margin-bottom:11px">
+        <h3 style="margin-bottom:8px"><span class="ico ico-o">&#128101;</span> Anggota Tim</h3>
+        <div class="team-bar" id="team-bar"></div>
+      </div>
+    </div>
+    <div class="sc">
+      <h3><span class="ico ico-g">&#9201;</span> Waktu Kerja</h3>
+      <div class="time-row">
+        <div class="tb"><div class="lbl">Jam Mulai</div><div class="val" id="disp-checkin">&#8211;&#8211;:&#8211;&#8211;:&#8211;&#8211;</div></div>
+        <div class="tb"><div class="lbl">Sekarang</div><div class="val live" id="disp-clock">&#8211;&#8211;:&#8211;&#8211;:&#8211;&#8211;</div></div>
+        <div class="tb"><div class="lbl">Durasi</div><div class="val" id="disp-dur" style="font-size:14px;padding-top:2px">&#8211;&#8211;</div></div>
+      </div>
+      <div id="btn-ci"><button class="btn btn-primary" onclick="doCheckin()">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Check-in Sekarang
+      </button></div>
+      <div id="ci-note" style="display:none" class="cn"><div class="dot-live"></div>Sedang bekerja &#8212; tambah sesi di bawah</div>
+    </div>
+    <div id="sesi-section" style="display:none">
+      <div class="sc">
+        <h3><span class="ico ico-o">&#128203;</span> Sesi Kerja Hari Ini</h3>
+        <div class="sesi-list" id="sesi-list"></div>
+        <div class="add-form">
+          <h4>+ Tambah Sesi</h4>
+          <div class="field"><label>Kode Order</label>
+            <select id="sesi-order" onchange="onOrderChange()"><option value="">&#8212; Pilih Kode Order &#8212;</option></select>
+          </div>
+          <div id="auto-info" class="auto-fill" style="display:none">
+            <strong>Otomatis Terisi</strong><span id="auto-txt"></span>
+          </div>
+          <div class="field"><label>Job Desc / Proses</label>
+            <select id="sesi-job"><option value="">&#8212; Pilih Proses &#8212;</option></select>
+          </div>
+          <div class="field-row">
+            <div class="field" style="margin:0">
+              <label>Jam Mulai Sesi</label>
+              <div class="time-input-wrap">
+                <input type="time" id="sesi-start"/>
+                <button class="btn-now" onclick="setNow('sesi-start')" title="Pakai jam sekarang">&#9201; Sekarang</button>
+              </div>
+            </div>
+            <div class="field" style="margin:0">
+              <label>Jam Selesai Sesi</label>
+              <div class="time-input-wrap">
+                <input type="time" id="sesi-end"/>
+                <button class="btn-now" onclick="setNow('sesi-end')" title="Pakai jam sekarang">&#9201; Sekarang</button>
+              </div>
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:10px">
+            <div class="field" style="margin:0"><label>Output</label><input type="number" id="sesi-qty" min="0" placeholder="0"/></div>
+            <div class="field" style="margin:0"><label>Reject</label><input type="number" id="sesi-reject" min="0" placeholder="0"/></div>
+          </div>
+          <div id="sesi-err" class="alert ae" style="display:none;margin-top:10px"></div>
+          <button class="btn btn-outline" style="margin-top:11px" onclick="addSesi()">
+            <svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah ke Daftar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer" id="home-footer" style="display:none">
+    <div id="co-err" class="alert aw" style="display:none"></div>
+    <button class="btn btn-danger" onclick="showCheckout()">
+      <svg class="ic" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Check-out &amp; Kirim Laporan
+    </button>
+  </div>
+</div>
+
+<!-- CHECKOUT -->
+<div id="sc-checkout" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('sc-home')">
+      <svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="topbar-info">
+      <div class="topbar-title">Konfirmasi Laporan</div>
+      <div class="topbar-sub">Periksa sebelum mengirim</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="sc">
+      <h3><span class="ico ico-b">&#128100;</span><span id="co-op-label">Data Operator</span></h3>
+      <div id="co-op-info"></div>
+    </div>
+    <div class="sc">
+      <h3><span class="ico ico-o">&#128203;</span> Sesi Kerja</h3>
+      <div id="co-sesi-list"></div>
+    </div>
+    <div id="co-alert" class="alert ae" style="display:none"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-success" onclick="doCheckout()" id="btn-submit">
+      <svg class="ic" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Kirim ke Google Sheets
+    </button>
+    <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Data otomatis masuk ke spreadsheet Risepack</div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div id="sc-done" class="screen">
+  <div class="topbar">
+    <img class="topbar-logo" src="./logo_rspk.jpeg" alt="Risepack"/>
+    <div class="topbar-info"><div class="topbar-title">Daily Production Report</div></div>
+  </div>
+  <div class="done-wrap">
+    <div class="done-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px">Laporan Terkirim!</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.6;max-width:300px" id="done-msg"></p>
+    <div class="sc" style="width:100%;text-align:left;margin-bottom:16px" id="done-summary"></div>
+    <button class="btn btn-outline" style="width:100%" onclick="doLogout()">&#8592; Kembali ke Login</button>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div id="sc-setup" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('sc-login')">
+      <svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="topbar-info">
+      <div class="topbar-title">Setup &amp; Kelola Data</div>
+      <div class="topbar-sub">Admin area</div>
+    </div>
+  </div>
+  <div class="body">
+
+    <div class="ss">
+      <div class="ss-title">&#128279; Google Apps Script URL</div>
+      <div class="field"><label>Web App URL</label>
+        <input type="text" id="set-gsurl" placeholder="https://script.google.com/macros/s/..."/>
+      </div>
+      <div style="font-size:12px;color:var(--text3)">URL dari Google Apps Script yang sudah di-deploy sebagai Web App.</div>
+    </div>
+
+    <div class="ss">
+      <div class="ss-title">&#128119; Operator</div>
+      <div id="setup-emp-list"></div>
+      <div class="sep"><span>Tambah Operator Baru</span></div>
+      <div class="add-form">
+        <div class="field-row">
+          <div class="field" style="margin:0"><label>Nama Lengkap</label><input type="text" id="ne-name" placeholder="Budi Santoso"/></div>
+          <div class="field" style="margin:0"><label>Nomor ID</label><input type="text" id="ne-id" placeholder="EMP001"/></div>
+        </div>
+        <div class="sep"><span>Tarif Upah (Rp/jam)</span></div>
+        <div class="field-row3">
+          <div class="field" style="margin:0"><label>Normal</label><input type="text" id="ne-normal" placeholder="0" inputmode="numeric"/></div>
+          <div class="field" style="margin:0"><label>Lembur</label><input type="text" id="ne-lembur" placeholder="0" inputmode="numeric"/></div>
+          <div class="field" style="margin:0"><label>Hari Libur</label><input type="text" id="ne-libur" placeholder="0" inputmode="numeric"/></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">Ketik angka saja, titik/koma pemisah ribuan otomatis muncul.</div>
+        <button class="btn btn-outline" style="margin-top:12px;border-color:var(--orange);color:var(--orange-d)" onclick="addEmp()">+ Tambah Operator</button>
+      </div>
+    </div>
+
+    <div class="ss">
+      <div class="ss-title">&#128230; Order Aktif</div>
+      <div id="setup-order-list"></div>
+      <div class="sep"><span>Tambah Order Baru</span></div>
+      <div class="add-form">
+        <div class="field-row">
+          <div class="field" style="margin:0"><label>Kode Order</label><input type="text" id="no-code" placeholder="ORD-2026-001"/></div>
+          <div class="field" style="margin:0"><label>Nama SPK</label><input type="text" id="no-spk" placeholder="Dinar-200"/></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label>Nama Produk</label><input type="text" id="no-prod" placeholder="Hardbox Degree Hitam"/></div>
+        <button class="btn btn-outline" style="margin-top:12px;border-color:var(--orange);color:var(--orange-d)" onclick="addOrder()">+ Tambah Order</button>
+      </div>
+    </div>
+
+    <div class="ss">
+      <div class="ss-title">&#9881;&#65039; Master Proses (Job Desc)</div>
+      <div id="setup-job-list"></div>
+      <div class="sep"><span>Tambah Proses Baru</span></div>
+      <div class="add-form">
+        <div class="field"><label>Nama Proses</label><input type="text" id="nj-name" placeholder="Forming, Sticking, Grooving..."/></div>
+        <button class="btn btn-outline" style="border-color:var(--orange);color:var(--orange-d)" onclick="addJob()">+ Tambah Proses</button>
+      </div>
+    </div>
+
+    <div id="setup-msg" class="alert" style="display:none"></div>
+    <button class="btn btn-primary" onclick="saveSetup()">&#128190; Simpan Semua Pengaturan</button>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+</div>
+<script>
+const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+let DB={
+  gsUrl:LS.get('gs_url')||'',
+  operators:LS.get('gs_operators')||[],
+  orders:(LS.get('gs_orders')||[]).map(o=>(o.active===undefined?{...o,active:true}:o)),
+  jobs:LS.get('gs_jobs')||['Forming','Sticking','Grooving','Assembling','Lapis','Gluing Manual','Cover Bawah','Cover Atas','Cover Selimut','Pond']
+};
+let S={users:[],isMulti:false,checkinTime:null,sesiList:[],checkoutTime:null};
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function pad(n){return String(n).padStart(2,'0')}
+function fmtTime(d){return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+function fmtTS(d){return pad(d.getHours())+':'+pad(d.getMinutes())}
+function fmtDate(d){return d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}
+function fmtDateS(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()}
+function diffMin(a,b){return Math.round((b-a)/60000)}
+function diffLbl(m){const h=Math.floor(m/60),mm=m%60;return h>0?h+'j '+pad(mm)+'m':mm+'m'}
+function fmtRp(n){if(!n||n==0)return 'Rp 0';return 'Rp '+Number(n).toLocaleString('id-ID')}
+
+// Auto-format currency inputs
+function setupCurrencyInput(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('input',function(){
+    let raw=this.value.replace(/\D/g,'');
+    if(raw===''){this.value='';return}
+    this.value=Number(raw).toLocaleString('id-ID');
+  });
+}
+function parseCurrency(val){return parseInt((val||'0').replace(/\D/g,''))||0}
+
+// Set time input to NOW
+function setNow(inputId){
+  const d=new Date();
+  document.getElementById(inputId).value=fmtTS(d);
+}
+
+setInterval(()=>{
+  const el=document.getElementById('disp-clock');if(el)el.textContent=fmtTime(new Date());
+  if(S.checkinTime){const d=document.getElementById('disp-dur');if(d)d.textContent=diffLbl(diffMin(S.checkinTime,new Date()));const f=document.getElementById('home-footer');if(f)f.style.display='block';}
+},1000);
+
+function setMode(m){
+  S.isMulti=m==='multi';
+  document.getElementById('tab-single').classList.toggle('active',!S.isMulti);
+  document.getElementById('tab-multi').classList.toggle('active',S.isMulti);
+  document.getElementById('panel-single').style.display=S.isMulti?'none':'block';
+  document.getElementById('panel-multi').style.display=S.isMulti?'block':'none';
+  if(S.isMulti&&document.querySelectorAll('.member-row').length===0)addMember();
+}
+
+function addMember(){
+  const wrap=document.getElementById('multi-members');
+  if(wrap.children.length>=10){alert('Maksimal 10 anggota.');return}
+  const n=wrap.children.length+1;
+  const div=document.createElement('div');div.className='member-row';
+  div.innerHTML='<div class="member-row-head">'
+    +'<div class="member-num">'+n+'</div>'
+    +'<div class="member-row-title">Anggota '+n+'</div>'
+    +'<button class="member-del" onclick="removeMember(this)">&#10005;</button>'
+    +'</div>'
+    +'<div class="field"><label>ID Operator</label>'
+    +'<select class="m-id" onchange="onMemberIdChange(this)"><option value="">&#8212; Pilih &#8212;</option>'
+    +DB.operators.map(o=>'<option value="'+o.id+'">'+o.id+' &#8212; '+o.name+'</option>').join('')
+    +'</select></div>';
+  wrap.appendChild(div);reNumber();
+}
+function removeMember(btn){btn.closest('.member-row').remove();reNumber()}
+function reNumber(){document.querySelectorAll('.member-row').forEach((r,i)=>{r.querySelector('.member-num').textContent=i+1;r.querySelector('.member-row-title').textContent='Anggota '+(i+1)})}
+function onMemberIdChange(sel){
+  // no-op since we removed PIN, name shown in option
+}
+
+function populateLoginSelect(){
+  const sel=document.getElementById('login-id');
+  sel.innerHTML='<option value="">&#8212; Pilih ID Operator &#8212;</option>';
+  DB.operators.forEach(e=>{sel.innerHTML+='<option value="'+e.id+'">'+e.id+' &#8212; '+e.name+'</option>'});
+}
+
+function doLogin(){
+  const id=document.getElementById('login-id').value,err=document.getElementById('login-err');
+  if(!id){err.style.display='block';err.textContent='Pilih ID operator.';return}
+  const op=DB.operators.find(e=>e.id===id);
+  if(!op){err.style.display='block';err.textContent='Operator tidak ditemukan.';return}
+  err.style.display='none';
+  S.users=[op];S.isMulti=false;initHome();
+}
+
+function doLoginMulti(){
+  const rows=document.querySelectorAll('.member-row'),err=document.getElementById('multi-err');
+  if(!rows.length){err.style.display='block';err.textContent='Tambahkan minimal 1 anggota.';return}
+  const users=[];
+  for(const row of rows){
+    const id=row.querySelector('.m-id').value;
+    if(!id){err.style.display='block';err.textContent='Pilih ID untuk semua anggota.';return}
+    const op=DB.operators.find(e=>e.id===id);
+    if(!op){err.style.display='block';err.textContent='Operator tidak ditemukan: '+id;return}
+    if(users.find(u=>u.id===id)){err.style.display='block';err.textContent='ID tidak boleh sama.';return}
+    users.push(op);
+  }
+  err.style.display='none';S.users=users;S.isMulti=true;initHome();
+}
+
+function initHome(){
+  S.checkinTime=null;S.sesiList=[];S.checkoutTime=null;
+  if(S.isMulti){
+    document.getElementById('home-title').textContent='Tim ('+S.users.length+' orang)';
+    document.getElementById('team-bar-wrap').style.display='block';
+    document.getElementById('team-bar').innerHTML=S.users.map((u,i)=>'<div class="team-pill"><div class="team-pill-dot">'+(i+1)+'</div>'+u.name.split(' ')[0]+'</div>').join('');
+  }else{
+    document.getElementById('home-title').textContent=S.users[0].name;
+    document.getElementById('team-bar-wrap').style.display='none';
+  }
+  document.getElementById('home-subtitle').textContent=(S.isMulti?S.users.map(u=>u.id).join(', '):S.users[0].id)+' · '+fmtDate(new Date());
+  document.getElementById('disp-checkin').textContent='--:--:--';document.getElementById('disp-dur').textContent='--';
+  document.getElementById('btn-ci').style.display='block';document.getElementById('ci-note').style.display='none';
+  document.getElementById('sesi-section').style.display='none';document.getElementById('home-footer').style.display='none';
+  populateSesiDropdowns();renderSesiList();_os('sc-home');
+}
+function doLogout(){S.users=[];S.checkinTime=null;S.sesiList=[];populateLoginSelect();showScreen('sc-login')}
+function doCheckin(){
+  S.checkinTime=new Date();
+  document.getElementById('disp-checkin').textContent=fmtTime(S.checkinTime);
+  document.getElementById('btn-ci').style.display='none';document.getElementById('ci-note').style.display='flex';
+  document.getElementById('sesi-section').style.display='block';
+  // preset jam mulai sesi = jam checkin
+  document.getElementById('sesi-start').value=fmtTS(S.checkinTime);
+  document.getElementById('sesi-end').value='';
+}
+
+function populateSesiDropdowns(){
+  const os=document.getElementById('sesi-order');
+  os.innerHTML='<option value="">&#8212; Pilih Kode Order &#8212;</option>';
+  // Only show active orders
+  DB.orders.filter(o=>o.active!==false).forEach(o=>{
+    os.innerHTML+='<option value="'+o.code+'">'+o.code+' &#8212; '+o.prod+'</option>'
+  });
+  const js=document.getElementById('sesi-job');js.innerHTML='<option value="">&#8212; Pilih Proses &#8212;</option>';
+  DB.jobs.forEach(j=>{js.innerHTML+='<option value="'+j+'">'+j+'</option>'});
+}
+
+function onOrderChange(){
+  const code=document.getElementById('sesi-order').value,box=document.getElementById('auto-info'),txt=document.getElementById('auto-txt');
+  if(!code){box.style.display='none';return}
+  const o=DB.orders.find(x=>x.code===code);
+  if(o){box.style.display='block';txt.textContent='SPK: '+o.spk+' · Produk: '+o.prod}
+}
+
+function addSesi(){
+  const code=document.getElementById('sesi-order').value,job=document.getElementById('sesi-job').value;
+  const start=document.getElementById('sesi-start').value,end=document.getElementById('sesi-end').value;
+  const qty=parseInt(document.getElementById('sesi-qty').value)||0,rej=parseInt(document.getElementById('sesi-reject').value)||0;
+  const e=document.getElementById('sesi-err');
+  if(!code){e.style.display='block';e.textContent='Pilih Kode Order.';return}
+  if(!job){e.style.display='block';e.textContent='Pilih Proses.';return}
+  if(!start||!end){e.style.display='block';e.textContent='Isi jam mulai & selesai.';return}
+  if(start>=end){e.style.display='block';e.textContent='Jam selesai harus lebih dari jam mulai.';return}
+  if(qty<1){e.style.display='block';e.textContent='Jumlah output minimal 1.';return}
+  e.style.display='none';
+  const ord=DB.orders.find(x=>x.code===code);
+  const[sh,sm]=start.split(':').map(Number),[eh,em]=end.split(':').map(Number);
+  S.sesiList.push({kodeOrder:code,namaSPK:ord?ord.spk:'',namaProd:ord?ord.prod:'',jobDesc:job,jamMulai:start+':00',jamSelesai:end+':00',durMin:(eh*60+em)-(sh*60+sm),jumlah:qty,reject:rej});
+  ['sesi-order','sesi-job','sesi-qty','sesi-reject'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('auto-info').style.display='none';
+  document.getElementById('sesi-start').value=end;document.getElementById('sesi-end').value='';
+  renderSesiList();
+}
+function removeSesi(i){S.sesiList.splice(i,1);renderSesiList()}
+function renderSesiList(){
+  const el=document.getElementById('sesi-list');
+  if(!S.sesiList.length){el.innerHTML='<div class="sesi-empty">Belum ada sesi. Tambahkan di bawah.</div>';return}
+  el.innerHTML=S.sesiList.map((s,i)=>'<div class="sesi-item"><div class="sesi-item-hd"><div class="sesi-left"><div class="sesi-order">'+s.kodeOrder+' &middot; '+s.jobDesc+'</div><div class="sesi-meta">'+s.namaSPK+' &#8212; '+s.namaProd+'</div></div><button class="sesi-del" onclick="removeSesi('+i+')">&#10005;</button></div><div class="sesi-nums"><span class="pill pt">'+s.jamMulai.substring(0,5)+'&#8211;'+s.jamSelesai.substring(0,5)+' &middot; '+diffLbl(s.durMin)+'</span><span class="pill po">Output: '+s.jumlah+'</span><span class="pill pr">Reject: '+s.reject+'</span></div></div>').join('');
+}
+
+function showCheckout(){
+  if(!S.checkinTime)return;
+  if(!S.sesiList.length){const e=document.getElementById('co-err');e.style.display='block';e.textContent='Tambahkan minimal 1 sesi kerja.';return}
+  S.checkoutTime=new Date();
+  const dur=diffMin(S.checkinTime,S.checkoutTime);
+  document.getElementById('co-op-label').textContent=S.isMulti?'Data Tim':'Data Operator';
+  const opRows=S.isMulti
+    ?S.users.map(u=>'<div class="ir"><span class="il">'+u.id+'</span><span class="iv">'+u.name+'</span></div>').join('')
+    :'<div class="ir"><span class="il">Nama</span><span class="iv">'+S.users[0].name+'</span></div><div class="ir"><span class="il">ID</span><span class="iv">'+S.users[0].id+'</span></div>';
+  document.getElementById('co-op-info').innerHTML=opRows
+    +'<div class="ir"><span class="il">Tanggal</span><span class="iv">'+fmtDate(S.checkoutTime)+'</span></div>'
+    +'<div class="ir"><span class="il">Jam Mulai</span><span class="iv">'+fmtTime(S.checkinTime)+'</span></div>'
+    +'<div class="ir"><span class="il">Jam Selesai</span><span class="iv">'+fmtTime(S.checkoutTime)+'</span></div>'
+    +'<div class="ir"><span class="il">Durasi</span><span class="iv">'+diffLbl(dur)+' ('+dur+' mnt)</span></div>';
+  document.getElementById('co-sesi-list').innerHTML=S.sesiList.map(s=>'<div class="sesi-item" style="margin-bottom:7px"><div class="sesi-order">'+s.kodeOrder+' &middot; '+s.jobDesc+'</div><div class="sesi-meta">'+s.namaSPK+' &#8212; '+s.namaProd+'</div><div class="sesi-nums"><span class="pill pt">'+s.jamMulai.substring(0,5)+'&#8211;'+s.jamSelesai.substring(0,5)+'</span><span class="pill po">Output: '+s.jumlah+'</span><span class="pill pr">Reject: '+s.reject+'</span></div></div>').join('');
+  document.getElementById('co-alert').style.display='none';showScreen('sc-checkout');
+}
+
+async function doCheckout(){
+  const btn=document.getElementById('btn-submit');btn.disabled=true;btn.textContent='Mengirim...';
+  const now=S.checkoutTime,dur=diffMin(S.checkinTime,now);
+  const baseRows=S.sesiList.map(s=>({tanggal:fmtDateS(now),jamMulai:s.jamMulai,jamSelesai:s.jamSelesai,durasi:s.durMin,durasiJam:+(s.durMin/60).toFixed(2),kodeOrder:s.kodeOrder,namaSPK:s.namaSPK,namaProduk:s.namaProd,jobDesc:s.jobDesc,jumlah:s.jumlah,reject:s.reject}));
+  const allRows=[];
+  S.users.forEach(u=>{baseRows.forEach(r=>{allRows.push(Object.assign({},r,{namaLengkap:u.name,nomorID:u.id,gajiNormal:u.gajiNormal||0,gajiLembur:u.gajiLembur||0,gajiLibur:u.gajiLibur||0}))})});
+  const payload={isMulti:S.isMulti,operators:S.users.map(u=>({id:u.id,name:u.name,gajiNormal:u.gajiNormal||0,gajiLembur:u.gajiLembur||0,gajiLibur:u.gajiLibur||0})),tanggal:fmtDateS(now),checkin:fmtTime(S.checkinTime),checkout:fmtTime(now),durasiTotal:dur,rows:allRows};
+  let ok=false;
+  if(DB.gsUrl){try{await fetch(DB.gsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify(payload),headers:{'Content-Type':'application/json'}});ok=true}catch(e){ok=false}}
+  const totalOut=S.sesiList.reduce((a,s)=>a+s.jumlah,0);
+  document.getElementById('done-msg').textContent=ok?'Data berhasil dikirim ke Google Spreadsheet. Admin dapat melengkapi data.':'Laporan disimpan. Pastikan URL Apps Script sudah benar.';
+  document.getElementById('done-summary').innerHTML=(S.isMulti?S.users.map(u=>'<div class="ir"><span class="il">'+u.id+'</span><span class="iv">'+u.name+'</span></div>').join(''):'<div class="ir"><span class="il">Operator</span><span class="iv">'+S.users[0].name+'</span></div>')+'<div class="ir"><span class="il">Tanggal</span><span class="iv">'+fmtDate(now)+'</span></div><div class="ir"><span class="il">Jam Kerja</span><span class="iv">'+fmtTime(S.checkinTime)+' &#8212; '+fmtTime(now)+'</span></div><div class="ir"><span class="il">Total Sesi</span><span class="iv">'+S.sesiList.length+' sesi</span></div><div class="ir"><span class="il">Total Output</span><span class="iv">'+totalOut+' pcs</span></div>'+(S.isMulti?'<div class="ir"><span class="il">Baris ke Sheets</span><span class="iv">'+allRows.length+' baris</span></div>':'');
+  btn.disabled=false;btn.innerHTML='Kirim ke Google Sheets';showScreen('sc-done');
+}
+
+// ── SETUP ──
+function loadSetupPage(){
+  document.getElementById('set-gsurl').value=DB.gsUrl;
+  renderSetupEmp();renderSetupOrder();renderSetupJob();
+  ['ne-normal','ne-lembur','ne-libur'].forEach(id=>setupCurrencyInput(id));
+}
+
+function renderSetupEmp(){
+  const el=document.getElementById('setup-emp-list');
+  if(!DB.operators.length){el.innerHTML='<p style="font-size:12px;color:var(--text3);margin-bottom:8px">Belum ada operator.</p>';return}
+  el.innerHTML=DB.operators.map((e,i)=>'<div class="di"><div class="di-info"><div class="di-name">'+e.name+' <span style="color:var(--text3);font-weight:400">('+e.id+')</span></div><div class="di-sub">Normal: '+fmtRp(e.gajiNormal)+' &middot; Lembur: '+fmtRp(e.gajiLembur)+' &middot; Libur: '+fmtRp(e.gajiLibur)+'</div></div><button class="sesi-del" onclick="removeEmp('+i+')">&#10005;</button></div>').join('');
+}
+function addEmp(){
+  const name=document.getElementById('ne-name').value.trim(),id=document.getElementById('ne-id').value.trim();
+  const gn=parseCurrency(document.getElementById('ne-normal').value);
+  const gl=parseCurrency(document.getElementById('ne-lembur').value);
+  const gb=parseCurrency(document.getElementById('ne-libur').value);
+  if(!name||!id){alert('Lengkapi nama dan ID.');return}
+  if(DB.operators.find(e=>e.id===id)){alert('ID sudah terdaftar.');return}
+  DB.operators.push({name,id,gajiNormal:gn,gajiLembur:gl,gajiLibur:gb});
+  ['ne-name','ne-id','ne-normal','ne-lembur','ne-libur'].forEach(x=>document.getElementById(x).value='');
+  renderSetupEmp();
+}
+function removeEmp(i){if(confirm('Hapus operator ini?')){DB.operators.splice(i,1);renderSetupEmp()}}
+
+function renderSetupOrder(){
+  const el=document.getElementById('setup-order-list');
+  if(!DB.orders.length){el.innerHTML='<p style="font-size:12px;color:var(--text3);margin-bottom:8px">Belum ada order.</p>';return}
+  el.innerHTML=DB.orders.map((o,i)=>{
+    const isActive=o.active!==false;
+    return '<div class="di"><div class="di-info"><div class="di-name">'+o.code+' <span class="'+(isActive?'badge-active':'badge-off')+'">'+(isActive?'Aktif':'Nonaktif')+'</span></div><div class="di-sub">SPK: '+o.spk+' &middot; '+o.prod+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+      +'<label class="toggle" title="'+(isActive?'Nonaktifkan':'Aktifkan')+' order"><input type="checkbox" '+(isActive?'checked ':'')+'onchange="toggleOrder('+i+',this.checked)"/><span class="toggle-slider"></span></label>'
+      +'<button class="sesi-del" onclick="removeOrder('+i+')">&#10005;</button>'
+      +'</div></div>';
+  }).join('');
+}
+function toggleOrder(i,active){DB.orders[i].active=active;LS.set('gs_orders',DB.orders);renderSetupOrder();populateSesiDropdowns()}
+function addOrder(){
+  const code=document.getElementById('no-code').value.trim(),spk=document.getElementById('no-spk').value.trim(),prod=document.getElementById('no-prod').value.trim();
+  if(!code||!spk||!prod){alert('Lengkapi semua field.');return}
+  if(DB.orders.find(o=>o.code===code)){alert('Kode order sudah ada.');return}
+  DB.orders.push({code,spk,prod,active:true});
+  ['no-code','no-spk','no-prod'].forEach(x=>document.getElementById(x).value='');renderSetupOrder();
+}
+function removeOrder(i){if(confirm('Hapus order ini?')){DB.orders.splice(i,1);renderSetupOrder()}}
+
+function renderSetupJob(){
+  const el=document.getElementById('setup-job-list');
+  if(!DB.jobs.length){el.innerHTML='<p style="font-size:12px;color:var(--text3);margin-bottom:8px">Belum ada proses.</p>';return}
+  el.innerHTML=DB.jobs.map((j,i)=>'<div class="di"><div class="di-info"><div class="di-name">'+j+'</div></div><button class="sesi-del" onclick="removeJob('+i+')">&#10005;</button></div>').join('');
+}
+function addJob(){
+  const name=document.getElementById('nj-name').value.trim();if(!name)return;
+  if(DB.jobs.includes(name)){alert('Proses sudah ada.');return}
+  DB.jobs.push(name);document.getElementById('nj-name').value='';renderSetupJob();
+}
+function removeJob(i){if(confirm('Hapus proses ini?')){DB.jobs.splice(i,1);renderSetupJob()}}
+
+function saveSetup(){
+  DB.gsUrl=document.getElementById('set-gsurl').value.trim();
+  LS.set('gs_url',DB.gsUrl);LS.set('gs_operators',DB.operators);LS.set('gs_orders',DB.orders);LS.set('gs_jobs',DB.jobs);
+  const msg=document.getElementById('setup-msg');msg.className='alert aok';msg.style.display='block';msg.textContent='Pengaturan berhasil disimpan.';
+  setTimeout(()=>{msg.style.display='none';showScreen('sc-login');populateLoginSelect();},1200);
+}
+
+const _os=showScreen;window.showScreen=function(id){if(id==='sc-setup')loadSetupPage();if(id==='sc-home')populateSesiDropdowns();_os(id)};
+
+// ── SYNC DATABASE DARI GOOGLE SHEETS ──
+async function syncFromSheets(){
+  if(!DB.gsUrl) return;
+  const statusEl=document.getElementById('sync-status');
+  try{
+    if(statusEl){statusEl.textContent='Memuat data...';statusEl.style.color='var(--orange)'}
+    const res=await fetch(DB.gsUrl+'?action=getDB',{method:'GET'});
+    const data=await res.json();
+    if(data.status==='ok'){
+      if(data.karyawan&&data.karyawan.length){
+        DB.operators=data.karyawan;
+        LS.set('gs_operators',DB.operators);
+      }
+      if(data.orders&&data.orders.length){
+        DB.orders=data.orders;
+        LS.set('gs_orders',DB.orders);
+      }
+      if(data.jobs&&data.jobs.length){
+        DB.jobs=data.jobs;
+        LS.set('gs_jobs',DB.jobs);
+      }
+      populateLoginSelect();
+      if(statusEl){statusEl.textContent='Data tersinkron ✓';statusEl.style.color='var(--green)';setTimeout(()=>{statusEl.textContent=''},3000)}
+    }
+  }catch(e){
+    if(statusEl){statusEl.textContent='Offline – pakai data lokal';statusEl.style.color='var(--text3)';setTimeout(()=>{statusEl.textContent=''},4000)}
+  }
+}
+
+populateLoginSelect();
+syncFromSheets();
+</script>
+</body>
+</html>
