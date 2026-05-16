@@ -182,7 +182,7 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-logo">
-      <img src="./logo_rspk.jpeg" alt="Risepack"/>
+      <img src="./logo_rspk.jpeg" alt="Risepack" style="height:28px;object-fit:contain;display:block"/>
       <div class="sb-logo-sub">Admin Dashboard</div>
     </div>
     <nav class="sb-nav">
@@ -194,17 +194,23 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
         <span class="sb-item-icon">&#128203;</span> Data Produksi
       </div>
       <div class="sb-section">Master Data</div>
-      <div class="sb-item" onclick="navTo('karyawan')">
-        <span class="sb-item-icon">&#128119;</span> Karyawan
+      <div class="sb-item sb-parent" onclick="toggleMaster(this)" id="sb-master-toggle">
+        <span class="sb-item-icon">&#128218;</span> Master Data
+        <span id="master-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">&#9660;</span>
       </div>
-      <div class="sb-item" onclick="navTo('order')">
-        <span class="sb-item-icon">&#128230;</span> Order
-      </div>
-      <div class="sb-item" onclick="navTo('proses')">
-        <span class="sb-item-icon">&#9881;</span> Proses
-      </div>
-      <div class="sb-item" onclick="navTo('spesifik')">
-        <span class="sb-item-icon">&#128196;</span> Spesifik Standar
+      <div id="master-submenu" style="display:block">
+        <div class="sb-item sb-sub" onclick="navTo('karyawan')" style="padding-left:32px">
+          <span class="sb-item-icon">&#128119;</span> Karyawan
+        </div>
+        <div class="sb-item sb-sub" onclick="navTo('order')" style="padding-left:32px">
+          <span class="sb-item-icon">&#128230;</span> Order
+        </div>
+        <div class="sb-item sb-sub" onclick="navTo('proses')" style="padding-left:32px">
+          <span class="sb-item-icon">&#9881;</span> Proses
+        </div>
+        <div class="sb-item sb-sub" onclick="navTo('spesifik')" style="padding-left:32px">
+          <span class="sb-item-icon">&#128196;</span> Spesifik Standar
+        </div>
       </div>
     </nav>
     <div class="sb-footer">
@@ -338,20 +344,36 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
   <div class="modal">
     <div class="modal-title">Tambah Spesifik Standar <button class="modal-close" onclick="closeModal('modal-add-spesifik')">&#10005;</button></div>
     <div class="form-grid form-grid-2" style="margin-bottom:12px">
-      <div class="field"><label>BOM</label><input type="text" id="sp-bom" placeholder="Board Atas"/></div>
-      <div class="field"><label>Component</label><input type="text" id="sp-comp" placeholder="Cover Atas"/></div>
+      <div class="field"><label>BOM</label>
+        <input type="text" id="sp-bom" placeholder="Board Atas" list="dl-bom" autocomplete="off"/>
+        <datalist id="dl-bom"></datalist>
+      </div>
+      <div class="field"><label>Component</label>
+        <input type="text" id="sp-comp" placeholder="Cover Atas" list="dl-comp" autocomplete="off"/>
+        <datalist id="dl-comp"></datalist>
+      </div>
     </div>
     <div class="form-grid form-grid-2" style="margin-bottom:12px">
-      <div class="field"><label>Process</label><input type="text" id="sp-proc" placeholder="Beli Material"/></div>
-      <div class="field"><label>Specific</label><input type="text" id="sp-spec" placeholder="Beli material mika"/></div>
+      <div class="field"><label>Process</label>
+        <input type="text" id="sp-proc" placeholder="Beli Material" list="dl-proc" autocomplete="off"/>
+        <datalist id="dl-proc"></datalist>
+      </div>
+      <div class="field"><label>Specific</label>
+        <input type="text" id="sp-spec" placeholder="Beli material mika" list="dl-spec" autocomplete="off"/>
+        <datalist id="dl-spec"></datalist>
+      </div>
     </div>
-    <div class="form-grid form-grid-4" style="margin-bottom:14px">
-      <div class="field"><label>Capacity</label><input type="number" id="sp-cap" placeholder="100000"/></div>
-      <div class="field"><label>Timeline (min)</label><input type="number" id="sp-time" placeholder="480"/></div>
+    <div class="form-grid form-grid-3" style="margin-bottom:12px">
+      <div class="field"><label>Capacity</label><input type="number" id="sp-cap" placeholder="100000" oninput="calcTarget()"/></div>
+      <div class="field"><label>Timeline (menit)</label><input type="number" id="sp-time" placeholder="480" oninput="calcTarget()"/></div>
+      <div class="field"><label>People</label><input type="number" id="sp-ppl" placeholder="1" min="1" oninput="calcTarget()"/></div>
+    </div>
+    <div class="form-grid form-grid-2" style="margin-bottom:14px">
       <div class="field"><label>Unit</label><input type="text" id="sp-unit" placeholder="pcs"/></div>
-      <div class="field"><label>Target Output</label><input type="number" id="sp-tgt" placeholder="0"/></div>
+      <div class="field"><label>Target Output/Min/People</label>
+        <input type="text" id="sp-tgt" readonly style="background:var(--surface2);font-weight:700;color:var(--orange-t)" placeholder="Otomatis (Capacity÷Timeline÷People)"/>
+      </div>
     </div>
-    <div class="field" style="margin-bottom:14px"><label>People</label><input type="number" id="sp-ppl" placeholder="1" min="1"/></div>
     <div id="sp-err" class="alert alert-err" style="display:none"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-outline" onclick="closeModal('modal-add-spesifik')">Batal</button>
@@ -363,7 +385,7 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
 <script>
 // ── CONFIG ──
 var GS_URL = "https://script.google.com/macros/s/AKfycbzjx1yXI_vv4tN29onMC19W7Bcbaqrg7MXAFT0Ga6EAz1Yz6b3cXt9zMavnCXGmhEaD/exec";
-var DB = { karyawan:[], orders:[], jobs:[], spesifik:[] };
+var DB = { karyawan:[], orders:[], jobs:[], spesifik:[], bomList:[], componentList:[], processList:[], specificList:[] };
 var currentPage = 'dashboard';
 
 // ── AUTH ──
@@ -450,7 +472,11 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 async function init(){
   setToday();
   var data = await apiGet('getDB');
-  if(data.status==='ok'){DB.karyawan=data.karyawan||[];DB.orders=data.orders||[];DB.jobs=data.jobs||[];DB.spesifik=data.spesifik||[];}
+  if(data.status==='ok'){
+    DB.karyawan=data.karyawan||[];DB.orders=data.orders||[];DB.jobs=data.jobs||[];DB.spesifik=data.spesifik||[];
+    DB.bomList=data.bomList||[];DB.componentList=data.componentList||[];
+    DB.processList=data.processList||[];DB.specificList=data.specificList||[];
+  }
   loadDashboard();
 }
 
@@ -679,7 +705,11 @@ async function saveProses(){
 async function loadSpesifik(){
   document.getElementById('spesifik-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   var data = await apiGet('getDB');
-  if(data.status==='ok') DB.spesifik=data.spesifik||[];
+  if(data.status==='ok'){
+    DB.spesifik=data.spesifik||[];
+    DB.bomList=data.bomList||[];DB.componentList=data.componentList||[];
+    DB.processList=data.processList||[];DB.specificList=data.specificList||[];
+  }
   var rows = DB.spesifik;
   if(!rows.length){document.getElementById('spesifik-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--text3)">Belum ada data spesifik.</div>';return;}
   var html='<div class="table-wrap"><table><thead><tr><th>BOM</th><th>Component</th><th>Process</th><th>Specific</th><th>Capacity</th><th>Timeline</th><th>Unit</th><th>Target Output</th><th>People</th></tr></thead><tbody>';
@@ -700,7 +730,6 @@ async function saveSpesifik(){
     capacity:parseInt(document.getElementById('sp-cap').value)||0,
     timeline:parseInt(document.getElementById('sp-time').value)||0,
     unit:document.getElementById('sp-unit').value.trim(),
-    targetOutput:parseInt(document.getElementById('sp-tgt').value)||0,
     people:parseInt(document.getElementById('sp-ppl').value)||1
   };
   var err=document.getElementById('sp-err');
@@ -712,6 +741,41 @@ async function saveSpesifik(){
 }
 
 // ── AUTO LOGIN CHECK ──
+function toggleMaster(el){
+  var sub=document.getElementById('master-submenu');
+  var arrow=document.getElementById('master-arrow');
+  var isOpen=sub.style.display!=='none';
+  sub.style.display=isOpen?'none':'block';
+  arrow.style.transform=isOpen?'rotate(-90deg)':'rotate(0deg)';
+}
+
+function calcTarget(){
+  var cap=parseFloat(document.getElementById('sp-cap').value)||0;
+  var tim=parseFloat(document.getElementById('sp-time').value)||0;
+  var ppl=parseFloat(document.getElementById('sp-ppl').value)||1;
+  var tgt = (tim>0&&ppl>0) ? Math.round((cap/tim/ppl)*100)/100 : 0;
+  document.getElementById('sp-tgt').value = tgt>0?tgt:'';
+}
+
+function populateDatalistsForSpesifik(){
+  var dlBom=document.getElementById('dl-bom');
+  var dlComp=document.getElementById('dl-comp');
+  var dlProc=document.getElementById('dl-proc');
+  var dlSpec=document.getElementById('dl-spec');
+  if(!dlBom||!dlComp||!dlProc||!dlSpec) return;
+  dlBom.innerHTML=DB.bomList.map(function(v){return '<option value="'+v+'">'}).join('');
+  dlComp.innerHTML=DB.componentList.map(function(v){return '<option value="'+v+'">'}).join('');
+  dlProc.innerHTML=DB.processList.map(function(v){return '<option value="'+v+'">'}).join('');
+  dlSpec.innerHTML=DB.specificList.map(function(v){return '<option value="'+v+'">'}).join('');
+}
+
+// Override openModal to populate datalists
+var _origOpenModal = openModal;
+function openModal(id){
+  _origOpenModal(id);
+  if(id==='modal-add-spesifik') populateDatalistsForSpesifik();
+}
+
 window.onload=function(){
   // Check if already "logged in" via session
   var d=new Date();
