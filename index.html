@@ -264,17 +264,7 @@ svg.ic{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;strok
             <div class="field" style="margin:0"><label>Output</label><input type="number" id="sesi-qty" min="0" placeholder="0"/></div>
             <div class="field" style="margin:0"><label>Reject</label><input type="number" id="sesi-reject" min="0" placeholder="0"/></div>
           </div>
-          <div class="field" style="margin-top:10px"><label>Component</label>
-            <select id="sesi-component"><option value="">&#8212; Pilih Component &#8212;</option></select>
-          </div>
-          <div class="field-row" style="margin-top:10px">
-            <div class="field" style="margin:0"><label>Aktivitas</label>
-              <select id="sesi-aktivitas"><option value="">&#8212; Aktivitas &#8212;</option></select>
-            </div>
-            <div class="field" style="margin:0"><label>Spesifik</label>
-              <select id="sesi-spesifik"><option value="">&#8212; Spesifik &#8212;</option></select>
-            </div>
-          </div>
+
           <div id="sesi-err" class="alert ae" style="display:none;margin-top:10px"></div>
           <button class="btn btn-outline" style="margin-top:11px" onclick="addSesi()">
             <svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -477,20 +467,10 @@ async function sheetsGet(action){
   return res.json();
 }
 async function sheetsPost(payload){
-  try{
-    var res=await fetch(GS_URL,{
-      method:'POST',
-      body:JSON.stringify(payload),
-      headers:{'Content-Type':'text/plain;charset=utf-8'}
-    });
-    if(res.ok) return res.json();
-    throw new Error('POST failed');
-  }catch(e){
-    // Fallback via GET with encoded data
-    var encoded=encodeURIComponent(JSON.stringify(payload));
-    var res2=await fetch(GS_URL+'?method=POST&data='+encoded,{method:'GET',redirect:'follow'});
-    return res2.json();
-  }
+  var encoded=encodeURIComponent(JSON.stringify(payload));
+  var url=GS_URL+'?method=POST&data='+encoded;
+  var res=await fetch(url,{method:'GET',redirect:'follow'});
+  return res.json();
 }
 
 // ── LOAD DB FROM SHEETS ──
@@ -620,15 +600,7 @@ function populateSesiDropdowns(){
   var js=document.getElementById('sesi-job');
   js.innerHTML='<option value="">&#8212; Pilih Proses &#8212;</option>';
   DB.jobs.forEach(function(j){js.innerHTML+='<option value="'+j+'">'+j+'</option>'});
-  var cs=document.getElementById('sesi-component');
-  if(cs){cs.innerHTML='<option value="">&#8212; Pilih Component &#8212;</option>';
-    DB.components.forEach(function(c){cs.innerHTML+='<option value="'+c+'">'+c+'</option>'});}
-  var as=document.getElementById('sesi-aktivitas');
-  if(as){as.innerHTML='<option value="">&#8212; Aktivitas &#8212;</option>';
-    DB.aktivitas.forEach(function(a){as.innerHTML+='<option value="'+a+'">'+a+'</option>'});}
-  var ss2=document.getElementById('sesi-spesifik');
-  if(ss2){ss2.innerHTML='<option value="">&#8212; Spesifik &#8212;</option>';
-    DB.spesifik.forEach(function(s){ss2.innerHTML+='<option value="'+s+'">'+s+'</option>'});}
+
 }
 
 function onOrderChange(){
@@ -651,13 +623,11 @@ function addSesi(){
   e.style.display='none';
   var ord=DB.orders.find(function(x){return x.code===code});
   var sh=start.split(':').map(Number),eh=end.split(':').map(Number);
-  var comp=document.getElementById('sesi-component')?document.getElementById('sesi-component').value:'';
-  var akt=document.getElementById('sesi-aktivitas')?document.getElementById('sesi-aktivitas').value:'';
-  var sp2=document.getElementById('sesi-spesifik')?document.getElementById('sesi-spesifik').value:'';
+  var comp='',akt='',sp2='';
   S.sesiList.push({kodeOrder:code,namaSPK:ord?ord.spk:'',namaProd:ord?ord.prod:'',jobDesc:job,
     jamMulai:start+':00',jamSelesai:end+':00',durMin:(eh[0]*60+eh[1])-(sh[0]*60+sh[1]),
     jumlah:qty,reject:rej,component:comp,aktivitas:akt,spesifik:sp2});
-  ['sesi-order','sesi-job','sesi-qty','sesi-reject','sesi-component','sesi-aktivitas','sesi-spesifik'].forEach(function(x){var el=document.getElementById(x);if(el)el.value=''});
+  ['sesi-order','sesi-job','sesi-qty','sesi-reject'].forEach(function(x){var el=document.getElementById(x);if(el)el.value=''});
   document.getElementById('auto-info').style.display='none';
   document.getElementById('sesi-start').value=end;document.getElementById('sesi-end').value='';
   renderSesiList();

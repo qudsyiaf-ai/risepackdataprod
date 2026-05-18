@@ -453,23 +453,12 @@ async function apiGet(action, params){
   return res.json();
 }
 async function apiPost(payload){
-  try{
-    // Use no-cors to avoid CORS preflight issues with Apps Script
-    // We append data as URL param for simple actions, POST body for complex
-    var res = await fetch(GS_URL, {
-      method:'POST',
-      body:JSON.stringify(payload),
-      headers:{'Content-Type':'text/plain;charset=utf-8'}
-    });
-    if(res.ok) return res.json();
-    // Fallback: try as GET with encoded payload for simple writes
-    throw new Error('POST failed, status: '+res.status);
-  }catch(e){
-    // Fallback: encode as URL param and send as GET
-    var encoded = encodeURIComponent(JSON.stringify(payload));
-    var res2 = await fetch(GS_URL+'?method=POST&data='+encoded, {method:'GET', redirect:'follow'});
-    return res2.json();
-  }
+  // Use GET with encoded payload - most reliable way to write to Apps Script
+  // without CORS issues from GitHub Pages
+  var encoded = encodeURIComponent(JSON.stringify(payload));
+  var url = GS_URL + '?method=POST&data=' + encoded;
+  var res = await fetch(url, {method:'GET', redirect:'follow'});
+  return res.json();
 }
 
 // ── NAV ──
@@ -542,7 +531,6 @@ function setThisMonth(){
   loadDashboard();
 }
 
-function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 
 // ── INIT ──
@@ -1000,12 +988,6 @@ function populateDatalistsForSpesifik(){
   dlSpec.innerHTML=DB.specificList.map(function(v){return '<option value="'+v+'">'}).join('');
 }
 
-// Override openModal to populate datalists
-var _origOpenModal = openModal;
-function openModal(id){
-  _origOpenModal(id);
-  if(id==='modal-add-spesifik') populateDatalistsForSpesifik();
-}
 
 window.onload=function(){
   // Check if already "logged in" via session
