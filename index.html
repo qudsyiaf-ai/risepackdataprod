@@ -477,12 +477,20 @@ async function sheetsGet(action){
   return res.json();
 }
 async function sheetsPost(payload){
-  var res=await fetch(GS_URL,{
-    method:'POST',
-    body:JSON.stringify(payload),
-    headers:{'Content-Type':'text/plain'} // avoid CORS preflight
-  });
-  return res.json();
+  try{
+    var res=await fetch(GS_URL,{
+      method:'POST',
+      body:JSON.stringify(payload),
+      headers:{'Content-Type':'text/plain;charset=utf-8'}
+    });
+    if(res.ok) return res.json();
+    throw new Error('POST failed');
+  }catch(e){
+    // Fallback via GET with encoded data
+    var encoded=encodeURIComponent(JSON.stringify(payload));
+    var res2=await fetch(GS_URL+'?method=POST&data='+encoded,{method:'GET',redirect:'follow'});
+    return res2.json();
+  }
 }
 
 // ── LOAD DB FROM SHEETS ──

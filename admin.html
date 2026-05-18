@@ -453,8 +453,23 @@ async function apiGet(action, params){
   return res.json();
 }
 async function apiPost(payload){
-  var res = await fetch(GS_URL,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}});
-  return res.json();
+  try{
+    // Use no-cors to avoid CORS preflight issues with Apps Script
+    // We append data as URL param for simple actions, POST body for complex
+    var res = await fetch(GS_URL, {
+      method:'POST',
+      body:JSON.stringify(payload),
+      headers:{'Content-Type':'text/plain;charset=utf-8'}
+    });
+    if(res.ok) return res.json();
+    // Fallback: try as GET with encoded payload for simple writes
+    throw new Error('POST failed, status: '+res.status);
+  }catch(e){
+    // Fallback: encode as URL param and send as GET
+    var encoded = encodeURIComponent(JSON.stringify(payload));
+    var res2 = await fetch(GS_URL+'?method=POST&data='+encoded, {method:'GET', redirect:'follow'});
+    return res2.json();
+  }
 }
 
 // ── NAV ──
