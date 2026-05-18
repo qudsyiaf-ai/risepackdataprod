@@ -634,51 +634,111 @@ async function loadLaporan(){
   }catch(e){document.getElementById('laporan-content').innerHTML='<div class="alert alert-err">Error koneksi.</div>';}
 }
 
+var LAPORAN_PAGE = 1;
+var LAPORAN_PAGE_SIZE = 15;
+var LAPORAN_ALL_ROWS = [];
+
 function renderLaporan(data){
-  var rows = data.rows||[];
+  LAPORAN_ALL_ROWS = data.rows||[];
+  LAPORAN_PAGE = 1;
+  renderLaporanPage();
+}
+
+function renderLaporanPage(){
+  var rows = LAPORAN_ALL_ROWS;
   if(!rows.length){document.getElementById('laporan-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--text3)">Tidak ada data untuk periode ini.</div>';return;}
 
-  // Build unique lists for dropdowns
-  var components = [...new Set(DB.spesifik.map(function(s){return s.component}).filter(Boolean))];
-  var kategoris  = [...new Set(DB.spesifik.map(function(s){return s.process}).filter(Boolean))];
-  var spesifiks  = [...new Set(DB.spesifik.map(function(s){return s.specific}).filter(Boolean))];
+  var components = DB.components||[];
+  var kategoris  = DB.aktivitas||[];
+  var spesifiks  = DB.spesifik||[];
 
-  var html = '<div style="margin-bottom:8px;font-size:12px;color:var(--text2)">'+rows.length+' baris data</div>';
+  var totalPages = Math.ceil(rows.length / LAPORAN_PAGE_SIZE);
+  var start = (LAPORAN_PAGE-1)*LAPORAN_PAGE_SIZE;
+  var pageRows = rows.slice(start, start+LAPORAN_PAGE_SIZE);
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+  html += '<span style="font-size:12px;color:var(--text2)">Menampilkan '+(start+1)+'-'+Math.min(start+LAPORAN_PAGE_SIZE,rows.length)+' dari '+rows.length+' data</span>';
+  html += '<div style="display:flex;align-items:center;gap:6px;font-size:12px">';
+  html += '<span>Per halaman:</span>';
+  html += '<select class="inline" style="width:60px" onchange="LAPORAN_PAGE_SIZE=parseInt(this.value);LAPORAN_PAGE=1;renderLaporanPage()"><option value="15"'+(LAPORAN_PAGE_SIZE===15?' selected':'')+'>15</option><option value="25"'+(LAPORAN_PAGE_SIZE===25?' selected':'')+'>25</option><option value="50"'+(LAPORAN_PAGE_SIZE===50?' selected':'')+'>50</option></select>';
+  html += '</div></div>';
+
   html += '<div class="table-wrap"><table><thead><tr>';
-  var cols = ['Tanggal','Nama Lengkap','Kode Order','Job Desc','Jumlah','Reject','Component','Kategori','Spesifik','Status Upah','Status Cek','Aksi'];
+  var cols = ['Tanggal','Nama Lengkap','Kode Order','Job Desc','Jumlah','Reject','Component','Aktivitas','Spesifik','Status Upah','Status Cek','Aksi'];
   cols.forEach(function(c){html+='<th>'+c+'</th>'});
   html += '</tr></thead><tbody>';
 
-  rows.forEach(function(r){
+  pageRows.forEach(function(r){
     var rowNum = r._row;
     var isCek  = String(r['Status Cek']||'') === '✓';
 
-    // Component dropdown
-    var compOpts = '<option value="">-</option>'+components.map(function(c){return '<option value="'+c+'"'+(r['Component']===c?' selected':'')+'>'+c+'</option>'}).join('');
-    // Kategori dropdown
-    var katOpts = '<option value="">-</option>'+kategoris.map(function(c){return '<option value="'+c+'"'+(r['Kategori']===c?' selected':'')+'>'+c+'</option>'}).join('');
-    // Spesifik dropdown
-    var spOpts = '<option value="">-</option>'+spesifiks.map(function(c){return '<option value="'+c+'"'+(r['Spesifik']===c?' selected':'')+'>'+c+'</option>'}).join('');
-    // Status upah
-    var upahOpts = ['','Normal','Lembur','Hari Libur'].map(function(u){return '<option value="'+u+'"'+(r['Status Upah']===u?' selected':'')+'>'+u+'</option>'}).join('');
+    var compOpts = '<option value="">-</option>'+components.map(function(c){return '<option value="'+c+'"'+(String(r['Component'])===c?' selected':'')+'>'+c+'</option>'}).join('');
+    var aktOpts  = '<option value="">-</option>'+kategoris.map(function(c){return '<option value="'+c+'"'+(String(r['Aktivitas']||r['Kategori'])===c?' selected':'')+'>'+c+'</option>'}).join('');
+    var spOpts   = '<option value="">-</option>'+spesifiks.map(function(c){return '<option value="'+c+'"'+(String(r['Spesifik'])===c?' selected':'')+'>'+c+'</option>'}).join('');
+    var upahOpts = ['','Normal','Lembur','Hari Libur'].map(function(u){return '<option value="'+u+'"'+(String(r['Status Upah'])===u?' selected':'')+'>'+u+'</option>'}).join('');
 
-    html+='<tr>';
+    html+='<tr id="row-'+rowNum+'">';
     html+='<td>'+fmtDateDisplay(String(r['Tanggal']||''))+'</td>';
     html+='<td><strong>'+String(r['Nama Lengkap']||'-')+'</strong><br><span style="font-size:10px;color:var(--text3)">'+String(r['Nomor ID']||'')+'</span></td>';
     html+='<td>'+String(r['Kode Order']||'-')+'<br><span style="font-size:10px;color:var(--text3)">'+String(r['Nama Produk']||'')+'</span></td>';
     html+='<td>'+String(r['Job Desc']||'-')+'</td>';
     html+='<td><strong>'+fmtNum(r['Jumlah'])+'</strong></td>';
     html+='<td>'+fmtNum(r['Reject'])+'</td>';
-    html+='<td><select class="inline" onchange="updateField('+rowNum+',\'Component\',this.value)">'+compOpts+'</select></td>';
-    html+='<td><select class="inline" onchange="updateField('+rowNum+',\'Kategori\',this.value)">'+katOpts+'</select></td>';
-    html+='<td><select class="inline" style="max-width:160px" onchange="updateField('+rowNum+',\'Spesifik\',this.value)">'+spOpts+'</select></td>';
-    html+='<td><select class="inline" onchange="updateField('+rowNum+',\'Status Upah\',this.value)">'+upahOpts+'</select></td>';
-    html+='<td style="text-align:center"><input type="checkbox" class="chk-cek" '+(isCek?'checked':'')+' onchange="toggleCek('+rowNum+',this.checked)"/></td>';
-    html+='<td class="td-actions"><button class="btn btn-outline btn-sm btn-icon" title="Lihat detail" onclick="alert(\'Row '+rowNum+'\')">&#128065;</button></td>';
+    html+='<td><select class="inline" id="comp-'+rowNum+'"><option value="">-</option>'+compOpts+'</select></td>';
+    html+='<td><select class="inline" id="akt-'+rowNum+'"><option value="">-</option>'+aktOpts+'</select></td>';
+    html+='<td><select class="inline" style="max-width:140px" id="sp-'+rowNum+'"><option value="">-</option>'+spOpts+'</select></td>';
+    html+='<td><select class="inline" id="upah-'+rowNum+'">'+upahOpts+'</select></td>';
+    html+='<td style="text-align:center"><input type="checkbox" class="chk-cek" id="cek-'+rowNum+'" '+(isCek?'checked':'')+'/></td>';
+    html+='<td class="td-actions">';
+    html+='<button class="btn btn-success btn-sm btn-icon" title="Simpan baris ini" onclick="saveRow('+rowNum+')">&#10003;</button>';
+    html+='</td>';
     html+='</tr>';
   });
+
   html += '</tbody></table></div>';
+
+  // Pagination controls
+  var totalPages2 = Math.ceil(LAPORAN_ALL_ROWS.length / LAPORAN_PAGE_SIZE);
+  if(totalPages2 > 1){
+    html += '<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap">';
+    html += '<button class="btn btn-outline btn-sm" onclick="goPage(1)" '+(LAPORAN_PAGE===1?'disabled':'')+'>&#171;</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goPage('+(LAPORAN_PAGE-1)+')" '+(LAPORAN_PAGE===1?'disabled':'')+'>&#8249;</button>';
+    var pStart2=Math.max(1,LAPORAN_PAGE-2),pEnd2=Math.min(totalPages2,LAPORAN_PAGE+2);
+    for(var pg=pStart2;pg<=pEnd2;pg++){
+      html+='<button class="btn btn-sm '+(pg===LAPORAN_PAGE?'btn-primary':'btn-outline')+'" onclick="goPage('+pg+')">'+pg+'</button>';
+    }
+    html += '<button class="btn btn-outline btn-sm" onclick="goPage('+(LAPORAN_PAGE+1)+')" '+(LAPORAN_PAGE===totalPages2?'disabled':'')+'>&#8250;</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goPage('+totalPages2+')" '+(LAPORAN_PAGE===totalPages2?'disabled':'')+'>&#187;</button>';
+    html += '<span style="font-size:11px;color:var(--text3);margin-left:6px">Hal '+LAPORAN_PAGE+' dari '+totalPages2+'</span>';
+    html += '</div>';
+  }
+
   document.getElementById('laporan-content').innerHTML = html;
+}
+
+function goPage(p){
+  var tp=Math.ceil(LAPORAN_ALL_ROWS.length/LAPORAN_PAGE_SIZE);
+  if(p<1||p>tp)return;
+  LAPORAN_PAGE=p;renderLaporanPage();
+}
+
+async function saveRow(rowNum){
+  var comp  = document.getElementById('comp-'+rowNum)  ? document.getElementById('comp-'+rowNum).value  : '';
+  var akt   = document.getElementById('akt-'+rowNum)   ? document.getElementById('akt-'+rowNum).value   : '';
+  var sp    = document.getElementById('sp-'+rowNum)    ? document.getElementById('sp-'+rowNum).value    : '';
+  var upah  = document.getElementById('upah-'+rowNum)  ? document.getElementById('upah-'+rowNum).value  : '';
+  var cek   = document.getElementById('cek-'+rowNum)   ? document.getElementById('cek-'+rowNum).checked : false;
+  var btn   = event.currentTarget;
+  btn.textContent='...';btn.disabled=true;
+  try{
+    var res=await apiPost({action:'updateRow',row:rowNum,updates:{
+      'Component':comp,'Aktivitas':akt,'Spesifik':sp,'Status Upah':upah,'Status Cek':cek?'✓':''
+    }});
+    if(res.status==='ok'){
+      btn.innerHTML='&#10003;';btn.style.background='var(--green)';
+      setTimeout(function(){btn.innerHTML='&#10003;';btn.disabled=false;btn.style.background='';},2000);
+    }else{btn.innerHTML='!';btn.disabled=false;alert('Gagal: '+(res.message||'Error'));}
+  }catch(e){btn.innerHTML='!';btn.disabled=false;alert('Error koneksi');}
 }
 
 async function updateField(rowNum, field, value){
