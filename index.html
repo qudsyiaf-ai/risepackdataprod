@@ -683,7 +683,7 @@ async function doCheckout(){
   document.getElementById('done-msg').textContent=ok?'Data berhasil dikirim ke Google Spreadsheet.':'Gagal mengirim. Cek koneksi internet dan coba lagi.';
   document.getElementById('done-summary').innerHTML=(S.isMulti?S.users.map(function(u){return '<div class="ir"><span class="il">'+u.id+'</span><span class="iv">'+u.name+'</span></div>'}).join(''):'<div class="ir"><span class="il">Operator</span><span class="iv">'+S.users[0].name+'</span></div>')
     +'<div class="ir"><span class="il">Tanggal</span><span class="iv">'+fmtDate(now)+'</span></div>'
-    +'<div class="ir"><span class="il">Jam Kerja</span><span class="iv">'+fmtTime(S.checkinTime)+' &#8212; '+fmtTime(now)+'</span></div>'
+    +'<div class="ir"><span class="il">Jam Kerja</span><span class="iv">'+fmtTime(S.checkinTime)+' &#8212; '+(S.sesiList.length?S.sesiList[S.sesiList.length-1].jamSelesai.substring(0,5):fmtTime(now))+'</span></div>'
     +'<div class="ir"><span class="il">Total Sesi</span><span class="iv">'+S.sesiList.length+' sesi</span></div>'
     +'<div class="ir"><span class="il">Total Output</span><span class="iv">'+totalOut+' pcs</span></div>';
   btn.disabled=false;btn.innerHTML='Kirim ke Google Sheets';showScreen('sc-done');

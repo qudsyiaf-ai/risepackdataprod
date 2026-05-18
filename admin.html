@@ -799,10 +799,10 @@ async function loadOrder(){
   if(!DB_LOADED){await reloadDB();}
   var rows = DB.orders;
   if(!rows.length){document.getElementById('order-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--text3)">Belum ada order.</div>';return;}
-  var html='<div class="table-wrap"><table><thead><tr><th>Kode Order</th><th>Nama SPK</th><th>Nama Produk</th><th>Qty Target</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+  var html='<div class="table-wrap"><table><thead><tr><th>Kode Order</th><th>Nama SPK</th><th>Nama Produk</th><th>Status</th><th>Aktif/Nonaktif</th></tr></thead><tbody>';
   rows.forEach(function(o){
     var isActive=o.active!==false;
-    html+='<tr><td><strong>'+o.code+'</strong></td><td>'+o.spk+'</td><td>'+o.prod+'</td><td>'+fmtNum(o.target)+'</td>';
+    html+='<tr><td><strong>'+o.code+'</strong></td><td>'+o.spk+'</td><td>'+o.prod+'</td>';
     html+='<td><span class="badge '+(isActive?'badge-green':'badge-gray')+'">'+(isActive?'Aktif':'Nonaktif')+'</span></td>';
     html+='<td class="td-actions"><label class="toggle"><input type="checkbox" '+(isActive?'checked ':'')+'onchange="toggleOrder(\''+o.code+'\',this.checked)"/><span class="toggle-sl"></span></label></td></tr>';
   });
@@ -859,7 +859,7 @@ async function loadSpesifik(){
 }
 
 // ── SIMPLE DB (Component, Aktivitas, Spesifik, Proses) ──
-function openModal(id, type){
+async function openModal(id, type){
   // Handle simple modal
   if(id==='modal-add-simple' && type){
     var titles = {component:'Tambah Component',aktivitas:'Tambah Aktivitas',spesifik:'Tambah Spesifik',proses:'Tambah Proses'};
@@ -874,6 +874,7 @@ function openModal(id, type){
   }
   // Handle standar modal - populate dropdowns
   if(id==='modal-add-standar'){
+    if(!DB_LOADED||!DB.aktivitas.length||!DB.spesifik.length){await reloadDB();}
     var sc=document.getElementById('st-comp'),sa=document.getElementById('st-akt'),ss2=document.getElementById('st-sp');
     if(sc){sc.innerHTML='<option value="">-- Pilih --</option>'+DB.components.map(function(c){return '<option value="'+c+'">'+c+'</option>'}).join('');}
     if(sa){sa.innerHTML='<option value="">-- Pilih --</option>'+DB.aktivitas.map(function(a){return '<option value="'+a+'">'+a+'</option>'}).join('');}
