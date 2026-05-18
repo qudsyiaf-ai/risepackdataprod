@@ -375,7 +375,7 @@ svg.ic{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;strok
           <div class="field" style="margin:0"><label>Nama Lengkap</label><input type="text" id="ne-name" placeholder="Budi Santoso"/></div>
           <div class="field" style="margin:0"><label>Nomor ID</label><input type="text" id="ne-id" placeholder="EMP001"/></div>
         </div>
-        <div class="sep"><span>Tarif Upah (Rp/hari)</span></div>
+        <div class="sep"><span>Tarif Upah (Rp/jam)</span></div>
         <div class="field-row3">
           <div class="field" style="margin:0"><label>Normal</label><input type="text" id="ne-normal" placeholder="0" inputmode="numeric" oninput="fmtCur(this)"/></div>
           <div class="field" style="margin:0"><label>Lembur</label><input type="text" id="ne-lembur" placeholder="0" inputmode="numeric" oninput="fmtCur(this)"/></div>
@@ -725,7 +725,7 @@ function renderSetupEmp(){
   if(!DB.operators.length){el.innerHTML='<p style="font-size:12px;color:var(--text3);margin-bottom:8px">Belum ada operator.</p>';return}
   el.innerHTML=DB.operators.map(function(e){
     return '<div class="di"><div class="di-info"><div class="di-name">'+e.name+' <span style="color:var(--text3);font-weight:400">('+e.id+')</span></div>'
-      +'<div class="di-sub">Normal: '+fmtRp(e.gajiNormal)+'/hari &middot; Lembur: '+fmtRp(e.gajiLembur)+'/hari &middot; Libur: '+fmtRp(e.gajiLibur)+'/hari</div></div>'
+      +'<div class="di-sub">Normal: '+fmtRp(e.gajiNormal)+'/jam &middot; Lembur: '+fmtRp(e.gajiLembur)+'/jam &middot; Libur: '+fmtRp(e.gajiLibur)+'/jam</div></div>'
       +'<button class="sesi-del" onclick="removeEmpFromSheets(\''+e.id+'\')">&#10005;</button></div>';
   }).join('');
 }
