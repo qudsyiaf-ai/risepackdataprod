@@ -346,9 +346,8 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
       <div class="field"><label>Kode Order</label><input type="text" id="o-code" placeholder="ORD-2026-001"/></div>
       <div class="field"><label>Nama SPK</label><input type="text" id="o-spk" placeholder="Dinar-200"/></div>
     </div>
-    <div class="form-grid form-grid-2" style="margin-bottom:14px">
-      <div class="field"><label>Nama Produk</label><input type="text" id="o-prod" placeholder="Hardbox Degree Hitam"/></div>
-      <div class="field"><label>Qty Target</label><input type="number" id="o-target" placeholder="0" min="0"/></div>
+    <div class="field" style="margin-bottom:14px">
+      <label>Nama Produk</label><input type="text" id="o-prod" placeholder="Hardbox Degree Hitam"/>
     </div>
     <div id="o-err" class="alert alert-err" style="display:none"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -386,6 +385,9 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
 <div id="modal-add-standar" class="modal-overlay">
   <div class="modal">
     <div class="modal-title">Tambah Spesifik Standar <button class="modal-close" onclick="closeModal('modal-add-standar')">&#10005;</button></div>
+    <div class="field" style="margin-bottom:12px">
+      <label>BOM</label><input type="text" id="st-bom" placeholder="Board Atas, Board Bawah..."/>
+    </div>
     <div class="form-grid form-grid-3" style="margin-bottom:12px">
       <div class="field"><label>Component</label>
         <select id="st-comp"><option value="">-- Pilih --</option></select>
@@ -778,14 +780,17 @@ async function saveKaryawan(){
   if(!name||!id){err.style.display='block';err.textContent='Nama dan ID wajib diisi.';return}
   err.style.display='none';
   var res=await apiPost({action:'addKaryawan',nama:name,id:id,gajiNormal:gn,gajiLembur:gl,gajiLibur:gb});
-  if(res.status==='ok'){closeModal('modal-add-karyawan');['k-name','k-id','k-normal','k-lembur','k-libur'].forEach(function(x){document.getElementById(x).value=''});loadKaryawan();}
-  else{err.style.display='block';err.textContent='Gagal: '+(res.message||'Error');}
+  if(res.status==='ok'){
+    closeModal('modal-add-karyawan');
+    ['k-name','k-id','k-normal','k-lembur','k-libur'].forEach(function(x){document.getElementById(x).value=''});
+    DB_LOADED=false;await reloadDB();loadKaryawan();
+  } else{err.style.display='block';err.textContent='Gagal: '+(res.message||'Error');}
 }
 
 async function removeKaryawan(id){
   if(!confirm('Nonaktifkan '+id+'?'))return;
   var res=await apiPost({action:'removeKaryawan',id:id});
-  if(res.status==='ok')loadKaryawan();else alert('Gagal: '+res.message);
+  if(res.status==='ok'){DB_LOADED=false;await reloadDB();loadKaryawan();}else alert('Gagal: '+res.message);
 }
 
 // ── ORDER ──
@@ -807,13 +812,16 @@ async function loadOrder(){
 
 async function saveOrder(){
   var code=document.getElementById('o-code').value.trim(),spk=document.getElementById('o-spk').value.trim();
-  var prod=document.getElementById('o-prod').value.trim(),target=parseInt(document.getElementById('o-target').value)||0;
+  var prod=document.getElementById('o-prod').value.trim();
   var err=document.getElementById('o-err');
   if(!code||!spk||!prod){err.style.display='block';err.textContent='Semua field wajib diisi.';return}
   err.style.display='none';
-  var res=await apiPost({action:'addOrder',code:code,spk:spk,prod:prod,target:target});
-  if(res.status==='ok'){closeModal('modal-add-order');['o-code','o-spk','o-prod','o-target'].forEach(function(x){document.getElementById(x).value=''});loadOrder();}
-  else{err.style.display='block';err.textContent='Gagal: '+(res.message||'Error');}
+  var res=await apiPost({action:'addOrder',code:code,spk:spk,prod:prod});
+  if(res.status==='ok'){
+    closeModal('modal-add-order');
+    ['o-code','o-spk','o-prod'].forEach(function(x){document.getElementById(x).value=''});
+    DB_LOADED=false;await reloadDB();loadOrder();
+  } else{err.style.display='block';err.textContent='Gagal: '+(res.message||'Error');}
 }
 
 async function toggleOrder(code,active){
@@ -903,6 +911,7 @@ function calcTargetSt(){
 }
 
 async function saveStandar(){
+  var bom=document.getElementById('st-bom')?document.getElementById('st-bom').value.trim():'';
   var comp=document.getElementById('st-comp').value;
   var akt=document.getElementById('st-akt').value;
   var sp=document.getElementById('st-sp').value;
@@ -913,9 +922,11 @@ async function saveStandar(){
   var err=document.getElementById('st-err');
   if(!comp){err.style.display='block';err.textContent='Component wajib dipilih.';return}
   err.style.display='none';
-  var res=await apiPost({action:'addStandar',component:comp,aktivitas:akt,spesifik:sp,capacity:cap,timeline:tim,people:ppl,unit:unit});
-  if(res.status==='ok'){closeModal('modal-add-standar');DB_LOADED=false;await reloadDB();loadStandar();}
-  else{err.style.display='block';err.textContent='Gagal: '+(res.message||'Error');}
+  var res=await apiPost({action:'addStandar',bom:bom,component:comp,aktivitas:akt,spesifik:sp,capacity:cap,timeline:tim,people:ppl,unit:unit});
+  if(res.status==='ok'){
+    closeModal('modal-add-standar');
+    DB_LOADED=false;await reloadDB();loadStandar();
+  }else{err.style.display='block';err.textContent='Gagal: '+(res.message||'Error');}
 }
 
 // ── LOAD FUNCTIONS ──
@@ -942,9 +953,9 @@ async function loadStandar(){
   if(!DB_LOADED){await reloadDB();}
   var rows=DB.standar;
   if(!rows.length){document.getElementById('standar-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--text3)">Belum ada data.</div>';return;}
-  var html='<div class="table-wrap"><table><thead><tr><th>Component</th><th>Aktivitas</th><th>Spesifik</th><th>Capacity</th><th>Timeline</th><th>Unit</th><th>Target/Min/People</th><th>People</th></tr></thead><tbody>';
+  var html='<div class="table-wrap"><table><thead><tr><th>BOM</th><th>Component</th><th>Aktivitas</th><th>Spesifik</th><th>Capacity</th><th>Timeline</th><th>Unit</th><th>Target/Min/People</th><th>People</th></tr></thead><tbody>';
   rows.forEach(function(s){
-    html+='<tr><td><strong>'+s.component+'</strong></td><td>'+s.aktivitas+'</td><td>'+s.spesifik+'</td><td>'+fmtNum(s.capacity)+'</td><td>'+s.timeline+' min</td><td>'+s.unit+'</td><td>'+s.targetPerMinPeople+'</td><td>'+s.people+'</td></tr>';
+    html+='<tr><td>'+s.bom+'</td><td><strong>'+s.component+'</strong></td><td>'+s.aktivitas+'</td><td>'+s.spesifik+'</td><td>'+fmtNum(s.capacity)+'</td><td>'+s.timeline+' min</td><td>'+s.unit+'</td><td>'+s.targetPerMinPeople+'</td><td>'+s.people+'</td></tr>';
   });
   html+='</tbody></table></div>';
   document.getElementById('standar-content').innerHTML=html;syncTime();
