@@ -325,7 +325,7 @@ input.inline{border:1px solid var(--border2);border-radius:4px;padding:3px 6px;f
       <div class="field"><label>Nama Lengkap</label><input type="text" id="k-name" placeholder="Budi Santoso"/></div>
       <div class="field"><label>Nomor ID</label><input type="text" id="k-id" placeholder="EMP001"/></div>
     </div>
-    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Tarif Upah (Rp/hari)</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Tarif Upah (Rp/jam)</div>
     <div class="form-grid form-grid-3" style="margin-bottom:14px">
       <div class="field"><label>Normal</label><input type="text" id="k-normal" placeholder="0" inputmode="numeric" oninput="fmtCur(this)"/></div>
       <div class="field"><label>Lembur</label><input type="text" id="k-lembur" placeholder="0" inputmode="numeric" oninput="fmtCur(this)"/></div>
@@ -764,7 +764,7 @@ async function loadKaryawan(){
   if(!DB_LOADED){await reloadDB();}
   var rows = DB.karyawan;
   if(!rows.length){document.getElementById('karyawan-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--text3)">Belum ada karyawan.</div>';return;}
-  var html='<div class="table-wrap"><table><thead><tr><th>ID</th><th>Nama</th><th>Normal/hari</th><th>Lembur/hari</th><th>Libur/hari</th><th>Aksi</th></tr></thead><tbody>';
+  var html='<div class="table-wrap"><table><thead><tr><th>ID</th><th>Nama</th><th>Normal/jam</th><th>Lembur/jam</th><th>Libur/jam</th><th>Aksi</th></tr></thead><tbody>';
   rows.forEach(function(k){
     html+='<tr><td><strong>'+k.id+'</strong></td><td>'+k.name+'</td><td>'+fmtRp(k.gajiNormal)+'</td><td>'+fmtRp(k.gajiLembur)+'</td><td>'+fmtRp(k.gajiLibur)+'</td>';
     html+='<td><button class="btn btn-danger btn-sm" onclick="removeKaryawan(\''+k.id+'\')">Nonaktifkan</button></td></tr>';
