@@ -244,6 +244,9 @@ svg.ic{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;strok
           <div class="field"><label>Job Desc / Proses</label>
             <select id="sesi-job"><option value="">&#8212; Pilih Proses &#8212;</option></select>
           </div>
+          <div class="field"><label>Component <span style="font-weight:400;color:var(--text3)">(opsional)</span></label>
+            <select id="sesi-component"><option value="">&#8212; Pilih Component &#8212;</option></select>
+          </div>
           <div class="field-row">
             <div class="field" style="margin:0">
               <label>Jam Mulai Sesi</label>
@@ -263,6 +266,10 @@ svg.ic{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;strok
           <div class="field-row" style="margin-top:10px">
             <div class="field" style="margin:0"><label>Output</label><input type="number" id="sesi-qty" min="0" placeholder="0"/></div>
             <div class="field" style="margin:0"><label>Reject</label><input type="number" id="sesi-reject" min="0" placeholder="0"/></div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label>Deskripsi Reject <span style="font-weight:400;color:var(--text3)">(opsional)</span></label>
+            <input type="text" id="sesi-reject-desc" placeholder="Contoh: warna buram, lipatan tidak rapi..."/>
           </div>
 
           <div id="sesi-err" class="alert ae" style="display:none;margin-top:10px"></div>
@@ -600,7 +607,11 @@ function populateSesiDropdowns(){
   var js=document.getElementById('sesi-job');
   js.innerHTML='<option value="">&#8212; Pilih Proses &#8212;</option>';
   DB.jobs.forEach(function(j){js.innerHTML+='<option value="'+j+'">'+j+'</option>'});
-
+  var cs=document.getElementById('sesi-component');
+  if(cs){
+    cs.innerHTML='<option value="">&#8212; Pilih Component &#8212;</option>';
+    (DB.components||[]).forEach(function(c){cs.innerHTML+='<option value="'+c+'">'+c+'</option>';});
+  }
 }
 
 function onOrderChange(){
@@ -623,11 +634,12 @@ function addSesi(){
   e.style.display='none';
   var ord=DB.orders.find(function(x){return x.code===code});
   var sh=start.split(':').map(Number),eh=end.split(':').map(Number);
-  var comp='',akt='',sp2='';
+  var comp=document.getElementById('sesi-component')?document.getElementById('sesi-component').value:'';
+  var rejectDesc=document.getElementById('sesi-reject-desc')?document.getElementById('sesi-reject-desc').value.trim():'';
   S.sesiList.push({kodeOrder:code,namaSPK:ord?ord.spk:'',namaProd:ord?ord.prod:'',jobDesc:job,
     jamMulai:start+':00',jamSelesai:end+':00',durMin:(eh[0]*60+eh[1])-(sh[0]*60+sh[1]),
-    jumlah:qty,reject:rej,component:comp,aktivitas:akt,spesifik:sp2});
-  ['sesi-order','sesi-job','sesi-qty','sesi-reject'].forEach(function(x){var el=document.getElementById(x);if(el)el.value=''});
+    jumlah:qty,reject:rej,rejectDesc:rejectDesc,component:comp});
+  ['sesi-order','sesi-job','sesi-qty','sesi-reject','sesi-reject-desc','sesi-component'].forEach(function(x){var el=document.getElementById(x);if(el)el.value=''});
   document.getElementById('auto-info').style.display='none';
   document.getElementById('sesi-start').value=end;document.getElementById('sesi-end').value='';
   renderSesiList();
@@ -667,7 +679,7 @@ async function doCheckout(){
   var baseRows=S.sesiList.map(function(s){
     return {tanggal:fmtDateS(now),jamMulai:s.jamMulai,jamSelesai:s.jamSelesai,durasi:s.durMin,durasiJam:+(s.durMin/60).toFixed(2),
       kodeOrder:s.kodeOrder,namaSPK:s.namaSPK,namaProduk:s.namaProd,jobDesc:s.jobDesc,
-      jumlah:s.jumlah,reject:s.reject,component:s.component||'',aktivitas:s.aktivitas||'',spesifik:s.spesifik||'',
+      jumlah:s.jumlah,reject:s.reject,rejectDesc:s.rejectDesc||'',component:s.component||'',
       namaLengkap:S.users[0]?S.users[0].name:'',nomorID:S.users[0]?S.users[0].id:''};
   });
   // Urutan: sesi dulu, baru per orang (order1: A,B,C → order2: A,B,C)
