@@ -489,6 +489,9 @@ async function loadDB(){
       DB.operators=data.karyawan||[];
       DB.orders=data.orders||[];
       DB.jobs=data.jobs||[];
+      DB.components=data.components||[];
+      DB.aktivitas=data.aktivitas||[];
+      DB.spesifik=data.spesifik||[];
     }else{
       document.getElementById('loading-msg').textContent='Gagal memuat: '+data.message;
     }
@@ -649,7 +652,8 @@ function renderSesiList(){
   var el=document.getElementById('sesi-list');
   if(!S.sesiList.length){el.innerHTML='<div class="sesi-empty">Belum ada sesi. Tambahkan di bawah.</div>';return}
   el.innerHTML=S.sesiList.map(function(s,i){
-    return '<div class="sesi-item"><div class="sesi-item-hd"><div class="sesi-left"><div class="sesi-order">'+s.kodeOrder+' &middot; '+s.jobDesc+'</div><div class="sesi-meta">'+s.namaSPK+' &#8212; '+s.namaProd+'</div></div><button class="sesi-del" onclick="removeSesi('+i+')">&#10005;</button></div><div class="sesi-nums"><span class="pill pt">'+s.jamMulai.substring(0,5)+'&#8211;'+s.jamSelesai.substring(0,5)+' &middot; '+diffLbl(s.durMin)+'</span><span class="pill po">Output: '+s.jumlah+'</span><span class="pill pr">Reject: '+s.reject+'</span></div></div>';
+    var compPill = s.component ? '<span class="pill po">'+s.component+'</span>' : '';
+    return '<div class="sesi-item"><div class="sesi-item-hd"><div class="sesi-left"><div class="sesi-order">'+s.kodeOrder+' &middot; '+s.jobDesc+'</div><div class="sesi-meta">'+s.namaSPK+' &#8212; '+s.namaProd+'</div></div><button class="sesi-del" onclick="removeSesi('+i+')">&#10005;</button></div><div class="sesi-nums"><span class="pill pt">'+s.jamMulai.substring(0,5)+'&#8211;'+s.jamSelesai.substring(0,5)+' &middot; '+diffLbl(s.durMin)+'</span><span class="pill po">Output: '+s.jumlah+'</span><span class="pill pr">Reject: '+s.reject+'</span>'+compPill+'</div></div>';
   }).join('');
 }
 
@@ -668,7 +672,8 @@ function showCheckout(){
     +'<div class="ir"><span class="il">Jam Selesai</span><span class="iv">'+fmtTime(S.checkoutTime)+'</span></div>'
     +'<div class="ir"><span class="il">Durasi</span><span class="iv">'+diffLbl(dur)+' ('+dur+' mnt)</span></div>';
   document.getElementById('co-sesi-list').innerHTML=S.sesiList.map(function(s){
-    return '<div class="sesi-item" style="margin-bottom:7px"><div class="sesi-order">'+s.kodeOrder+' &middot; '+s.jobDesc+'</div><div class="sesi-meta">'+s.namaSPK+' &#8212; '+s.namaProd+'</div><div class="sesi-nums"><span class="pill pt">'+s.jamMulai.substring(0,5)+'&#8211;'+s.jamSelesai.substring(0,5)+'</span><span class="pill po">Output: '+s.jumlah+'</span><span class="pill pr">Reject: '+s.reject+'</span></div></div>';
+    var coComp = s.component ? '<span class="pill po">'+s.component+'</span>' : '';
+    return '<div class="sesi-item" style="margin-bottom:7px"><div class="sesi-order">'+s.kodeOrder+' &middot; '+s.jobDesc+'</div><div class="sesi-meta">'+s.namaSPK+' &#8212; '+s.namaProd+'</div><div class="sesi-nums"><span class="pill pt">'+s.jamMulai.substring(0,5)+'&#8211;'+s.jamSelesai.substring(0,5)+'</span><span class="pill po">Output: '+s.jumlah+'</span><span class="pill pr">Reject: '+s.reject+'</span>'+coComp+'</div></div>';
   }).join('');
   document.getElementById('co-alert').style.display='none';showScreen('sc-checkout');
 }
